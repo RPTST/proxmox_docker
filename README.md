@@ -1,38 +1,37 @@
 # proxmox_docker
 Let’s Install Docker on Proxmox, with ZFS, and good performance!
 
-We are installing docker-ce on the host, and Portainer 1 to help manage containers.
+We are installing docker-ce on the host, and Portainer to help manage containers.
 
-This is for dev only. I think. See, you really have to have a deep understanding of all the systems involved to understand what sort of risks you’re opening up yourself to by going off script. LXC containers, by default (imho) have better host isolation than Docker, for example.
+Docker inside a Virtual Machine or LXC container can’t really take advantage of some of the ZFS features. 
 
-And Docker inside a Virtual Machine or LXC container can’t really get at some of the ZFS features it would be nice to be able to access from inside the container.
-
+# See the official documentation
 https://docs.docker.com/storage/storagedriver/zfs-driver/
 
-So on my setup I have the default rpool that Proxmox gives you, and I have added ssdpool at /ssdpool.
+Using the default rpool that Proxmox gives you, and setting up/adding a ssdpool at /ssdpool.
 
-I am adding my docker storage on the SSDs for now.
+Adding the docker storage on the SSDs for now.
 
     $zfs create -o mountpoint=/var/lib/docker ssdpool/docker-root
     $zfs create -o mountpoint=/var/lib/docker/volumes ssdpool/docker-volumes 
 
-zfs list will show you the mounted ZFS stuff around your filesystem. It’s nice.
+zfs list will show you the mounted ZFS stuff around your filesystem.
 
-We’ll want to disable auto-snapshotting on the root vut enable it on the volumes:
+Disable auto-snapshotting on the root but enable it on the volumes:
 
     $zfs set com.sun:auto-snapshot=false ssdpool/docker-root 
     $zfs set com.sun:auto-snapshot=true ssdpool/docker-volumes
 
-And finally, according to the ZFS storage driver doc above we need to add the storage driver as ZFS. You can also set a quota
+Finally, according to the ZFS storage driver doc above we need to add the storage driver as ZFS. You can also set a quota
 
-edit or create /etc/docker/daemon.json
+# edit or create /etc/docker/daemon.json
 
     $nano /etc/docker/daemon.json
     {   
          "storage-driver": "zfs"
     } 
 
-Actually Setup Docker
+# Setting up Docker
 
 Now we can install docker CE. Follow their docs, or cheatsheet:
 
@@ -49,3 +48,11 @@ Finally, install amd test
     apt install docker-ce docker-ce-cli containerd.io
 
     $docker run hello-world 
+
+# Portainer
+
+    zfs create ssdpool/docker-volumes/portainer_data
+    docker volume create portainer_data
+    docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
+
+Go to http://yourip.example.com:9000 and set a password
