@@ -51,8 +51,8 @@ Finally, install amd test
 
 # Portainer
 
-    zfs create ssdpool/docker-volumes/portainer_data
-    docker volume create portainer_data
-    docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
+    $zfs create ssdpool/docker-volumes/portainer_data
+    $docker volume create portainer_data
+    $docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
 
 Go to http://yourip.example.com:9000 and set a password
